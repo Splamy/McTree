@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+	<script src="//d3js.org/d3.v5.min.js"></script>
+	<script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+	<script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+	<script src="https://dagrejs.github.io/project/graphlib/latest/graphlib.min.js"></script>
+	<meta name="viewport" content="width=device-width" />
+</head>
+
+<body data-sveltekit-preload-data="hover">
+
+</body>
+
+<textarea id="deps"></textarea>
+<div id="graph" style="text-align: center;"></div>
+
+<script>
+	const deps_input = document.querySelector("#deps");
+	deps_input.addEventListener("input", run);
+
+	function run() {
+		let ctx = parse(deps_input.value);
+		get_flat_list(ctx);
+		render(ctx);
+	}
+
+	function parse(input) {
+		const ctx = {
+			deps: new Map(),
+			target: { name: "<x>", count: 0 },
+			counts: new Map(),
+		};
+
+		const lines = input.split("\n");
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+
+			const matchRule = line.match(/^\s*(\w+)\s*<-(\s*([\d\.]+)\s*(x|\*))?\s*(\w+)/);
+
+			if (matchRule) {
+				let target = matchRule[1];
+				let count = matchRule[3];
+				let ingrid = matchRule[5];
+
+				count = Number(count);
+				if (isNaN(count)) {
+					count = 1;
+				}
+
+				let deplist = ctx.deps.get(target);
+				if (deplist == undefined) {
+					deplist = new Map();
+					ctx.deps.set(target, deplist);
+				}
+
+				let existing = deplist.get(ingrid) || 0;
+				deplist.set(ingrid, existing + count);
+				continue;
+			}
+
+			const matchStart = line.match(/=(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			if (matchStart) {
+				let count = matchStart[2];
+				let ingrid = matchStart[4];
+
+				count = Number(count);
+				if (isNaN(count)) {
+					count = 1;
+				}
+
+				ctx.target = { name: ingrid, count };
+				let existing = ctx.counts.get(ingrid) || 0;
+				ctx.counts.set(ingrid, existing + count);
+				continue;
+			}
+
+			const matchSub = line.match(/-(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			if (matchSub) {
+				let count = matchSub[2];
+				let ingrid = matchSub[4];
+
+				count = Number(count);
+				if (isNaN(count)) {
+					continue;
+				}
+
+				let existing = ctx.counts.get(ingrid) || 0;
+				ctx.counts.set(ingrid, existing - count);
+				continue;
+			}
+		}
+
+		// console.log(deps);
+		return ctx;
+	}
+
+	function get_flat_list(ctx) {
+		const g = new graphlib.Graph({ multigraph: false, compound: false });
+
+		for (const [target, deplist] of ctx.deps) {
+			for (const [ingrid, count] of deplist) {
+				g.setEdge(target, ingrid);
+			}
+		}
+
+		let toplist = graphlib.alg.topsort(g);
+		// console.log(toplist);
+
+
+		for (let group of graphlib.alg.components(g)) {
+			if (group.includes(ctx.target.name)) {
+				group = new Set(group);
+				ctx.group = group;
+				toplist = toplist.filter((x) => group.has(x));
+				break;
+			}
+		}
+
+		ctx.group = ctx.group ?? new Set();
+
+		// console.log(toplist);
+
+		for (let item of toplist) {
+			const itemdeps = ctx.deps.get(item);
+			if (itemdeps == undefined) {
+				continue;
+			}
+
+			let selfcount = ctx.counts.get(item) || 0;
+
+			for (const [ingrid, count] of itemdeps) {
+				const existing = ctx.counts.get(ingrid) || 0;
+				ctx.counts.set(ingrid, existing + selfcount * count);
+			}
+		}
+	}
+
+	function render(ctx) {
+		let digraph = "digraph {\n";
+
+		console.log(ctx);
+
+		for (const [ingrid, count] of ctx.counts) {
+			if (count <= 0) {
+				continue;
+			}
+
+			digraph += `  ${ingrid} [label="${ingrid} (${count})"];\n`;
+		}
+
+		digraph += "\n";
+
+		for (const [target, deplist] of ctx.deps) {
+			for (const [ingrid, count] of deplist) {
+				let want_count = ctx.counts.get(ingrid) || 0;
+				if (want_count <= 0) {
+					continue;
+				}
+
+				digraph += `  ${ingrid} -> ${target} [label="${count}"];\n`;
+			}
+		}
+
+		digraph += "}";
+
+		console.log(digraph);
+
+		d3.select("#graph")
+			.graphviz()
+			.renderDot(digraph);
+	}
+
+	run();
+</script>
+
+</html>
