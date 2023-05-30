@@ -39,7 +39,7 @@
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 
-			const matchRule = line.match(/^\s*(\w+)\s*<-(\s*([\d\.]+)\s*(x|\*))?\s*(\w+)/);
+			const matchRule = line.match(/^\s*(\w+)\s*<-?(\s*([\d\.]+)\s*(x|\*))?\s*(\w+)/);
 
 			if (matchRule) {
 				let target = matchRule[1];
@@ -149,7 +149,8 @@
 				continue;
 			}
 
-			digraph += `  ${ingrid} [label="${ingrid} (${count})"];\n`;
+			const countRound = Math.ceil(count);
+			digraph += `  ${ingrid} [label="${ingrid} (${countRound})"];\n`;
 		}
 
 		digraph += "\n";
@@ -164,7 +165,8 @@
 					continue;
 				}
 
-				digraph += `  ${ingrid} -> ${target} [label="${count}"];\n`;
+				const countRound = Math.ceil(count);
+				digraph += `  ${ingrid} -> ${target} [label="${countRound}"];\n`;
 			}
 		}
 
