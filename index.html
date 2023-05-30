@@ -165,7 +165,7 @@
 					continue;
 				}
 
-				const countRound = Math.ceil(count);
+				const countRound = parseFloat(count.toFixed(2));
 				digraph += `  ${ingrid} -> ${target} [label="${countRound}"];\n`;
 			}
 		}
