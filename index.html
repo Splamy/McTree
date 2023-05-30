@@ -62,7 +62,7 @@
 				continue;
 			}
 
-			const matchStart = line.match(/=(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			const matchStart = line.match(/^\s*=(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
 			if (matchStart) {
 				let count = matchStart[2];
 				let ingrid = matchStart[4];
@@ -78,7 +78,7 @@
 				continue;
 			}
 
-			const matchSub = line.match(/-(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			const matchSub = line.match(/^\s*-(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
 			if (matchSub) {
 				let count = matchSub[2];
 				let ingrid = matchSub[4];
@@ -130,7 +130,7 @@
 				continue;
 			}
 
-			let selfcount = ctx.counts.get(item) || 0;
+			let selfcount = Math.max(ctx.counts.get(item) || 0, 0);
 
 			for (const [ingrid, count] of itemdeps) {
 				const existing = ctx.counts.get(ingrid) || 0;
@@ -155,9 +155,12 @@
 		digraph += "\n";
 
 		for (const [target, deplist] of ctx.deps) {
+			if ((ctx.counts.get(target) || 0) <= 0) {
+				continue;
+			}
+
 			for (const [ingrid, count] of deplist) {
-				let want_count = ctx.counts.get(ingrid) || 0;
-				if (want_count <= 0) {
+				if ((ctx.counts.get(ingrid) || 0) <= 0) {
 					continue;
 				}
 
