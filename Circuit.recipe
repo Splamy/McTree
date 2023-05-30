@@ -1,0 +1,60 @@
+= 1 * Circuit
+
+Circuit <- 1 * Steel_Casing
+Circuit <- 2 * Resistor
+Circuit <- 2 * Vacuum_Tube
+Circuit <- 1 * Circuit_Board
+Circuit <- 3 * Red_Alloy_Cable
+
+Resistor <- 2 * Ball_of_Glue
+Resistor <- 2 * Fine_Copper_Wire
+Resistor <- 2 * Copper_Wire
+Resistor <- Coal_Dust
+
+Vacuum_Tube <- 3 * Copper_Wire
+Vacuum_Tube <- 2 * Fine_Copper_Wire
+Vacuum_Tube <- 1 * Glass_Tube
+Vacuum_Tube <- 2 * Steel_Rod
+Vacuum_Tube <- 1 * Red_Alloy_Bolt
+
+Circuit_Board <- 8 * Copper_Wire
+Circuit_Board <- 1 * Coated_Circuit_Board
+
+/<Alt>Coated_Circuit_Board <- 2 * Ball_of_Glue
+Coated_Circuit_Board <- 2 * Sticky_Resin
+Coated_Circuit_Board <- 1 * Wood_Plank
+
+Red_Alloy_Cable <- 1 * Red_Alloy_Wire
+Red_Alloy_Cable <- 1 * Rubber_Sheet
+
+# Handcrafted
+Steel_Rod <- 1 * Steel_Ingot
+
+Copper_Plate <- Copper_Ingot
+
+# Wiremill
+/Copper_Wire <- 0.5 * Copper_Ingot
+/Fine_Copper_Wire <- 0.125 * Copper_Ingot
+/Red_Alloy_Wire <- 0.5 * Red_Alloy_Ingot
+# Wiremill recepies (Handcrafted)
+Copper_Wire <- 1 * Copper_Ingot
+Fine_Copper_Wire <- 1 * Copper_Foil
+Red_Alloy_Wire <- 1 * Red_Alloy_Ingot
+
+Copper_Foil <- 0.5 * Copper_Ingot
+
+# In Alloy Smelter
+Steel_Casing <- 0.66666 * Steel_Ingot
+Rubber_Sheet <- 2 * Rubber_Bar
+
+Rubber_Bar <- 3 * Raw_Rubber_Dust
+Rubber_Bar <- 1 * Sulfur_Dust
+
+# Centrifuge
+Raw_Rubber_Dust <- 0.33333 * Sticky_Resin
+
+# Fluid Extractor + Solidifier
+/Rubber_Sheet <- 1 * Rubber_Bar
+
+# Tinker
+Ball_of_Glue <- 1 * Rubber_Bar 
