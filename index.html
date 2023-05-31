@@ -156,7 +156,8 @@
 		digraph += "\n";
 
 		for (const [target, deplist] of ctx.deps) {
-			if ((ctx.counts.get(target) || 0) <= 0) {
+			const targetCount = (ctx.counts.get(target) || 0);
+			if (targetCount <= 0) {
 				continue;
 			}
 
@@ -165,7 +166,8 @@
 					continue;
 				}
 
-				const countRound = parseFloat(count.toFixed(2));
+				const partCount = targetCount * count;
+				const countRound = parseFloat(partCount.toFixed(2));
 				digraph += `  ${ingrid} -> ${target} [label="${countRound}"];\n`;
 			}
 		}

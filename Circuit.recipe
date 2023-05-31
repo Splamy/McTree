@@ -29,21 +29,15 @@ Red_Alloy_Cable <- 1 * Rubber_Sheet
 
 # Handcrafted
 Steel_Rod <- 1 * Steel_Ingot
-
+Copper_Foil <- 0.5 * Copper_Ingot
 Copper_Plate <- Copper_Ingot
 
 # Wiremill
-/Copper_Wire <- 0.5 * Copper_Ingot
-/Fine_Copper_Wire <- 0.125 * Copper_Ingot
-/Red_Alloy_Wire <- 0.5 * Red_Alloy_Ingot
-# Wiremill recepies (Handcrafted)
-Copper_Wire <- 1 * Copper_Ingot
-Fine_Copper_Wire <- 1 * Copper_Foil
-Red_Alloy_Wire <- 1 * Red_Alloy_Ingot
+Copper_Wire <- 0.5 * Copper_Ingot
+Fine_Copper_Wire <- 0.125 * Copper_Ingot
+Red_Alloy_Wire <- 0.5 * Red_Alloy_Ingot
 
-Copper_Foil <- 0.5 * Copper_Ingot
-
-# In Alloy Smelter
+# Alloy Smelter
 Steel_Casing <- 0.66666 * Steel_Ingot
 Rubber_Sheet <- 2 * Rubber_Bar
 
