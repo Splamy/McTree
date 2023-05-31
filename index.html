@@ -9,23 +9,47 @@
 	<script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
 	<script src="https://dagrejs.github.io/project/graphlib/latest/graphlib.min.js"></script>
 	<meta name="viewport" content="width=device-width" />
+
+	<style>
+		body {
+			display: flex;
+			flex-direction: row;
+			height: 100vh;
+			margin: 0;
+		}
+
+		#deps {
+			height: 100vh;
+			font-family: monospace;
+			border: 1px solid black;
+			min-width: 500px;
+		}
+
+		#graph {
+			flex-grow: 1;
+			height: 100%;
+		}
+	</style>
 </head>
 
-<body data-sveltekit-preload-data="hover">
-
+<body>
+	<textarea id="deps"></textarea>
+	<div id="graph" style="text-align: center;"></div>
 </body>
 
-<textarea id="deps"></textarea>
-<div id="graph" style="text-align: center;"></div>
-
 <script>
+	let diagram = undefined;
+	let diag_x, diag_y;
 	const deps_input = document.querySelector("#deps");
 	deps_input.addEventListener("input", run);
+	const elem_graph = document.querySelector("#graph");
+	const render_debounced = debounce(render, 100);
 
 	function run() {
 		let ctx = parse(deps_input.value);
 		get_flat_list(ctx);
-		render(ctx);
+		build_diagram(ctx);
+		render_debounced();
 	}
 
 	function parse(input) {
@@ -39,17 +63,11 @@
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 
-			const matchRule = line.match(/^\s*(\w+)\s*<-?(\s*([\d\.]+)\s*(x|\*))?\s*(\w+)/);
-
+			const matchRule = line.match(/^\s*((?<TargetCount>[\d\.]+)\s*\*\s*)?(?<Target>\w+)\s*<-?\s*((?<IngridCount>[\d\.]+)\s*\*\s*)?(?<Ingrid>\w+)/);
 			if (matchRule) {
-				let target = matchRule[1];
-				let count = matchRule[3];
-				let ingrid = matchRule[5];
-
-				count = Number(count);
-				if (isNaN(count)) {
-					count = 1;
-				}
+				let target = matchRule.groups.Target;
+				let count = NumOr1(matchRule.groups.IngridCount) / NumOr1(matchRule.groups.TargetCount);
+				let ingrid = matchRule.groups.Ingrid;
 
 				let deplist = ctx.deps.get(target);
 				if (deplist == undefined) {
@@ -62,34 +80,29 @@
 				continue;
 			}
 
-			const matchStart = line.match(/^\s*=(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			const matchStart = line.match(/^\s*=\s*((?<TargetCount>[\d\.]+)\s*\*\s*)?(?<Target>\w+)/);
 			if (matchStart) {
-				let count = matchStart[2];
-				let ingrid = matchStart[4];
+				let target = matchStart.groups.Target;
+				let count = NumOr1(matchStart.groups.TargetCount);
 
-				count = Number(count);
-				if (isNaN(count)) {
-					count = 1;
-				}
-
-				ctx.target = { name: ingrid, count };
-				let existing = ctx.counts.get(ingrid) || 0;
-				ctx.counts.set(ingrid, existing + count);
+				ctx.target = { name: target, count };
+				let existing = ctx.counts.get(target) || 0;
+				ctx.counts.set(target, existing + count);
 				continue;
 			}
 
-			const matchSub = line.match(/^\s*-(\s*(\d+)\s*(x|\*))?\s*(\w+)/);
+			const matchSub = line.match(/^\s*-\s*((?<TargetCount>[\d\.]+)\s*\*\s*)?(?<Target>\w+)/);
 			if (matchSub) {
-				let count = matchSub[2];
-				let ingrid = matchSub[4];
+				let target = matchSub.groups.Target;
+				let count = matchSub.groups.TargetCount;
 
 				count = Number(count);
 				if (isNaN(count)) {
 					continue;
 				}
 
-				let existing = ctx.counts.get(ingrid) || 0;
-				ctx.counts.set(ingrid, existing - count);
+				let existing = ctx.counts.get(target) || 0;
+				ctx.counts.set(target, existing - count);
 				continue;
 			}
 		}
@@ -139,7 +152,7 @@
 		}
 	}
 
-	function render(ctx) {
+	function build_diagram(ctx) {
 		let digraph = "digraph {\n";
 
 		console.log(ctx);
@@ -174,11 +187,38 @@
 
 		digraph += "}";
 
-		console.log(digraph);
+		//console.log(digraph);
+		diagram = digraph;
+	}
+
+	function render() {
+		if (diagram == undefined) {
+			return;
+		}
 
 		d3.select("#graph")
-			.graphviz()
-			.renderDot(digraph);
+			.graphviz({
+				width: "100%",
+				heigth: "100%",
+				fit: true,
+			})
+			.renderDot(diagram);
+	}
+
+	function debounce(func, timeout = 300) {
+		let timer;
+		return (...args) => {
+			clearTimeout(timer);
+			timer = setTimeout(() => { func.apply(this, args); }, timeout);
+		};
+	}
+
+	function NumOr1(val) {
+		const num = Number(val);
+		if (isNaN(num)) {
+			return 1;
+		}
+		return num;
 	}
 
 	run();
