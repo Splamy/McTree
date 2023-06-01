@@ -46,6 +46,8 @@
 	const elem_graph = document.querySelector("#graph");
 	const render_debounced = debounce(render, 100);
 
+	const vgoal = "<goal>";
+
 	function run() {
 		let ctx = parse(deps_input.value);
 		get_flat_list(ctx);
@@ -56,9 +58,20 @@
 	function parse(input) {
 		const ctx = {
 			deps: new Map(),
-			target: { name: "<x>", count: 0 },
 			counts: new Map(),
 		};
+		ctx.counts.set(vgoal, 1);
+
+		function addDeps(target, ingrid, count) {
+			let deplist = ctx.deps.get(target);
+			if (deplist == undefined) {
+				deplist = new Map();
+				ctx.deps.set(target, deplist);
+			}
+
+			let existing = deplist.get(ingrid) || 0;
+			deplist.set(ingrid, existing + count);
+		}
 
 		const lines = input.split("\n");
 		for (let i = 0; i < lines.length; i++) {
@@ -70,14 +83,7 @@
 				let count = NumOr1(matchRule.groups.IngridCount) / NumOr1(matchRule.groups.TargetCount);
 				let ingrid = matchRule.groups.Ingrid;
 
-				let deplist = ctx.deps.get(target);
-				if (deplist == undefined) {
-					deplist = new Map();
-					ctx.deps.set(target, deplist);
-				}
-
-				let existing = deplist.get(ingrid) || 0;
-				deplist.set(ingrid, existing + count);
+				addDeps(target, ingrid, count);
 				continue;
 			}
 
@@ -86,9 +92,7 @@
 				let target = matchStart.groups.Target;
 				let count = NumOr1(matchStart.groups.TargetCount);
 
-				ctx.target = { name: target, count };
-				let existing = ctx.counts.get(target) || 0;
-				ctx.counts.set(target, existing + count);
+				addDeps(vgoal, target, count);
 				continue;
 			}
 
@@ -126,7 +130,7 @@
 
 
 		for (let group of graphlib.alg.components(g)) {
-			if (group.includes(ctx.target.name)) {
+			if (group.includes(vgoal)) {
 				group = new Set(group);
 				ctx.group = group;
 				toplist = toplist.filter((x) => group.has(x));
@@ -159,7 +163,7 @@
 		console.log(ctx);
 
 		for (const [ingrid, count] of ctx.counts) {
-			if (count <= 0) {
+			if (count <= 0 || ingrid == vgoal) {
 				continue;
 			}
 
@@ -171,7 +175,7 @@
 
 		for (const [target, deplist] of ctx.deps) {
 			const targetCount = (ctx.counts.get(target) || 0);
-			if (targetCount <= 0) {
+			if (targetCount <= 0 || target == vgoal) {
 				continue;
 			}
 
