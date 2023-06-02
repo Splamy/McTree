@@ -33,19 +33,19 @@ Copper_Foil <- 0.5 * Copper_Ingot
 Copper_Plate <- Copper_Ingot
 
 # Wiremill
-Copper_Wire <- 0.5 * Copper_Ingot
-Fine_Copper_Wire <- 0.125 * Copper_Ingot
-Red_Alloy_Wire <- 0.5 * Red_Alloy_Ingot
+2 * Copper_Wire <- Copper_Ingot
+8 * Fine_Copper_Wire <- Copper_Ingot
+2 * Red_Alloy_Wire <- Red_Alloy_Ingot
 
 # Alloy Smelter
-Steel_Casing <- 0.66666 * Steel_Ingot
+3 * Steel_Casing <- 2 * Steel_Ingot
 Rubber_Sheet <- 2 * Rubber_Bar
 
 Rubber_Bar <- 3 * Raw_Rubber_Dust
 Rubber_Bar <- 1 * Sulfur_Dust
 
 # Centrifuge
-Raw_Rubber_Dust <- 0.33333 * Sticky_Resin
+3 * Raw_Rubber_Dust <- Sticky_Resin
 
 # Fluid Extractor + Solidifier
 /Rubber_Sheet <- 1 * Rubber_Bar
