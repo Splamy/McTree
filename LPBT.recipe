@@ -1,0 +1,33 @@
+/= 36 * LPBT
+
+LPBT < 6 * Iron_Casing
+
+2 * Iron_Casing < Iron_Plate
+Iron_Plate < Iron_Ingot
+
+/= 9 * SFBF
+
+SFBF < 4 * Iron_Plate
+SFBF < Cauldron
+SFBF < Iron_Furnace
+
+/= 9 * LFBF
+
+LFBF < 4 * Steel_Plate
+LFBF < Cauldron
+LFBF < Iron_Furnace
+
+Cauldron < 7 * Iron_Plate
+Iron_Furnace < 5 * Iron_Plate
+
+= 9 * Bronze_Firebox_Casing
+
+Bronze_Firebox_Casing < 4 * Bronze_Plate
+Bronze_Firebox_Casing < 4 * Bronze_Rod
+Bronze_Firebox_Casing < Bronze_Frame_Box
+
+Bronze_Frame_Box < 4 * Bronze_Rod
+
+Bronze_Plate < Bronze_Ingot
+
+Bronze_Rod < Bronze_Ingot

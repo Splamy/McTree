@@ -18,12 +18,24 @@
 			margin: 0;
 		}
 
-		#deps {
+		.sourceData {
 			height: 100vh;
 			font-family: monospace;
 			border: 1px solid black;
 			min-width: 500px;
 			height: calc(100% - 50px);
+			display: flex;
+			flex-direction: column;
+		}
+
+		.panel {
+			flex: 1;
+			flex-direction: column;
+			display: flex;
+		}
+
+		.expand {
+			flex: 1;
 		}
 
 		#graph {
@@ -34,7 +46,19 @@
 </head>
 
 <body>
-	<textarea id="deps"></textarea>
+	<div class="sourceData">
+		<select id="source_mode">
+			<option value="local">Local</option>
+			<option value="sync">Sync</option>
+		</select>
+		<div id="panel_local" class="panel" style="display: none;">
+			<textarea class="expand" id="deps"></textarea>
+		</div>
+		<div id="panel_sync" class="panel" style="display: none;">
+			<input id="sync_url" type="text" />
+			<iframe id="sync_iframe" class="expand"></iframe>
+		</div>
+	</div>
 	<div id="graph" style="text-align: center;"></div>
 </body>
 
@@ -45,15 +69,83 @@
 	deps_input.addEventListener("input", run);
 	const elem_graph = document.querySelector("#graph");
 	const render_debounced = debounce(render, 100);
+	const source_mode = document.querySelector("#source_mode");
+	source_mode.onchange = () => display_source_mode();
+	const elem_sync_url = document.querySelector("#sync_url");
+	elem_sync_url.onchange = () => update_base_url();
+	const elem_sync_iframe = document.querySelector("#sync_iframe");
+	let last_text = undefined;
+	let poll_timer = undefined;
+	let base_poll_url = undefined;
 
 	const vgoal = "<goal>";
 
 	function run() {
+		if (last_text == deps_input.value) {
+			return;
+		}
+		last_text = deps_input.value;
+
 		let ctx = parse(deps_input.value);
 		get_flat_list(ctx);
 		build_diagram(ctx);
 		render_debounced();
 	}
+
+	function display_source_mode() {
+		const mode = source_mode.value;
+		document.querySelector("#panel_local").style.display = mode == "local" ? "" : "none";
+		document.querySelector("#panel_sync").style.display = mode == "sync" ? "" : "none";
+
+		if (mode == "sync") {
+			poll_timer = setInterval(poll_sync, 1000);
+		} else {
+			clearInterval(poll_timer);
+		}
+	}
+
+	async function poll_sync() {
+		const url = base_poll_url + "/download";
+
+		try {
+			const req = await fetch(url);
+			const text = await req.text();
+
+			deps_input.value = text;
+			run();
+		} catch (e) {
+			console.log("poll_sync error", e);
+			return;
+		}
+	}
+
+	function update_base_url() {
+		const url = elem_sync_url.value;
+		if (url == "") {
+			return;
+		}
+
+		const hash = url.indexOf("#");
+		if (hash != -1) {
+			url = url.substring(0, hash);
+		}
+
+		const query = url.indexOf("?");
+		if (query != -1) {
+			url = url.substring(0, query);
+		}
+
+		while (url.endsWith("/")) {
+			url = url.substring(0, url.length - 1);
+		}
+
+		base_poll_url = url;
+
+		elem_sync_iframe.src = base_poll_url + "?edit";
+		display_source_mode();
+	}
+
+	update_base_url();
 
 	function parse(input) {
 		const ctx = {
