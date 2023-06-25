@@ -164,16 +164,16 @@ function build_diagram(ctx) {
         digraph += `  ${ingrid} [label="${ingrid} (${countRound})"];\n`;
     }
     digraph += "\n";
-    for (const [target, deplist] of ctx.deps) {
+    for (const [target, recipe] of ctx.deps) {
         const targetCount = (ctx.counts.get(target) || 0);
         if (targetCount <= 0 || target == vgoal) {
             continue;
         }
-        for (const [ingrid, count] of deplist.ingredients) {
+        for (const [ingrid, count] of recipe.ingredients) {
             if ((ctx.counts.get(ingrid) || 0) <= 0) {
                 continue;
             }
-            const partCount = targetCount * count;
+            const partCount = targetCount * (count / recipe.count_target);
             const countRound = parseFloat(partCount.toFixed(2));
             digraph += `  ${ingrid} -> ${target} [label="${countRound}"];\n`;
         }
