@@ -18,12 +18,17 @@ const vgoal = "<goal>";
 interface GraphCtx {
 	deps: Map<string, RecepieRequirements>;
 	counts: Map<string, number>;
+	items: Map<string, ItemMetadata>
 	group?: Set<string>;
 }
 
 interface RecepieRequirements {
 	count_target: number;
 	ingredients: Map<string, number>;
+}
+
+interface ItemMetadata {
+	stack?: number;
 }
 
 function run() {
@@ -95,6 +100,7 @@ function parse(input: string) {
 	const ctx: GraphCtx = {
 		deps: new Map<string, RecepieRequirements>(),
 		counts: new Map<string, number>(),
+		items: new Map<string, ItemMetadata>(),
 	};
 	ctx.counts.set(vgoal, 1);
 
@@ -148,6 +154,21 @@ function parse(input: string) {
 
 			let existing = ctx.counts.get(target) || 0;
 			ctx.counts.set(target, existing - count);
+			continue;
+		}
+
+		const matchItemMeta = line.match(/^\s*\%\s*(?<Target>\w+)\s*(?<Data>\{.*\})$/);
+		if (matchItemMeta) {
+			let target = matchItemMeta.groups.Target;
+			let data = matchItemMeta.groups.Data;
+
+			try {
+				const meta = JSON.parse(data);
+				ctx.items.set(target, meta);
+			} catch (e) {
+				console.log("Failed to parse item metadata", e);
+			}
+
 			continue;
 		}
 	}
@@ -209,8 +230,8 @@ function build_diagram(ctx: GraphCtx) {
 			continue;
 		}
 
-		const countRound = Math.ceil(count);
-		digraph += `  ${ingrid} [label="${ingrid} (${countRound})"];\n`;
+		const label = FormatItemStack(ctx, ingrid, count);
+		digraph += `  ${ingrid} [label=<${label}>];\n`;
 	}
 
 	digraph += "\n";
@@ -270,6 +291,35 @@ function NumOr1(val: string | number | undefined) {
 
 function RoundToSmallestMultiple(val: number, multiple: number) {
 	return Math.ceil(val / multiple) * multiple;
+}
+
+function FormatItemStack(ctx: GraphCtx, item: string, count: number) {
+	const meta = ctx.items.get(item);
+
+	const stack = meta?.stack ?? 64;
+
+
+	const countRound = Math.ceil(count);
+
+	let format;
+
+	if (count > stack) {
+		const stacks = Math.floor(count / stack);
+		const rest = count % stack;
+
+		if (stacks >= 1) {
+			format = `${countRound} ≃ ${stacks}`;
+		}
+
+		if (rest > 0) {
+			format += `;${rest}`;
+		}
+	} else {
+		format = `${countRound}`;
+	}
+
+	let str = `${item} (${format})`;
+	return str;
 }
 
 update_base_url();

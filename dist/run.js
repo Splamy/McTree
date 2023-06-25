@@ -71,6 +71,7 @@ function parse(input) {
     const ctx = {
         deps: new Map(),
         counts: new Map(),
+        items: new Map(),
     };
     ctx.counts.set(vgoal, 1);
     function addDeps(target, ingrid, count_target, count_ingrid) {
@@ -114,6 +115,19 @@ function parse(input) {
             }
             let existing = ctx.counts.get(target) || 0;
             ctx.counts.set(target, existing - count);
+            continue;
+        }
+        const matchItemMeta = line.match(/^\s*\%\s*(?<Target>\w+)\s*(?<Data>\{.*\})$/);
+        if (matchItemMeta) {
+            let target = matchItemMeta.groups.Target;
+            let data = matchItemMeta.groups.Data;
+            try {
+                const meta = JSON.parse(data);
+                ctx.items.set(target, meta);
+            }
+            catch (e) {
+                console.log("Failed to parse item metadata", e);
+            }
             continue;
         }
     }
@@ -160,8 +174,8 @@ function build_diagram(ctx) {
         if (count <= 0 || ingrid == vgoal) {
             continue;
         }
-        const countRound = Math.ceil(count);
-        digraph += `  ${ingrid} [label="${ingrid} (${countRound})"];\n`;
+        const label = FormatItemStack(ctx, ingrid, count);
+        digraph += `  ${ingrid} [label="${label}"];\n`;
     }
     digraph += "\n";
     for (const [target, recipe] of ctx.deps) {
@@ -210,6 +224,27 @@ function NumOr1(val) {
 }
 function RoundToSmallestMultiple(val, multiple) {
     return Math.ceil(val / multiple) * multiple;
+}
+function FormatItemStack(ctx, item, count) {
+    const meta = ctx.items.get(item);
+    const stack = meta?.stack ?? 64;
+    const countRound = Math.ceil(count);
+    let format;
+    if (count > stack) {
+        const stacks = Math.floor(count / stack);
+        const rest = count % stack;
+        if (stacks >= 1) {
+            format = `${countRound} ≃ ${stacks}`;
+        }
+        if (rest > 0) {
+            format += `;${rest}`;
+        }
+    }
+    else {
+        format = `${countRound}`;
+    }
+    let str = `${item} (${format})`;
+    return str;
 }
 update_base_url();
 display_source_mode();
