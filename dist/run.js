@@ -175,7 +175,7 @@ function build_diagram(ctx) {
             continue;
         }
         const label = FormatItemStack(ctx, ingrid, count);
-        digraph += `  ${ingrid} [label="${label}"];\n`;
+        digraph += `  ${ingrid} [label=<${label}>];\n`;
     }
     digraph += "\n";
     for (const [target, recipe] of ctx.deps) {
@@ -233,12 +233,7 @@ function FormatItemStack(ctx, item, count) {
     if (count > stack) {
         const stacks = Math.floor(count / stack);
         const rest = count % stack;
-        if (stacks >= 1) {
-            format = `${countRound} ≃ ${stacks}`;
-        }
-        if (rest > 0) {
-            format += `;${rest}`;
-        }
+        format = `${countRound} ≃ ${stacks};${rest}`;
     }
     else {
         format = `${countRound}`;

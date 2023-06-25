@@ -307,13 +307,7 @@ function FormatItemStack(ctx: GraphCtx, item: string, count: number) {
 		const stacks = Math.floor(count / stack);
 		const rest = count % stack;
 
-		if (stacks >= 1) {
-			format = `${countRound} ≃ ${stacks}`;
-		}
-
-		if (rest > 0) {
-			format += `;${rest}`;
-		}
+		format = `${countRound} ≃ ${stacks};${rest}`;
 	} else {
 		format = `${countRound}`;
 	}
